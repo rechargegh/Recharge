@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Recharge Investment</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#D4A017;--gold2:#F5C842;--red:#C0392B;--bg:#0A0A0A;--card:#141414;--card2:#1C1C1C;--border:#2A2A2A;--text:#F0EDE8;--muted:#888;--green:#27AE60}
+body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+/* ADMIN */
+#adminScreen{position:fixed;inset:0;background:#0A0A0A;z-index:998;display:none;flex-direction:column;overflow-y:auto}
+#adminScreen.open{display:flex}
+.admin-topbar{background:linear-gradient(135deg,#0A0020,#1A0040);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #2A0060}
+.admin-title{font-family:"Sora",sans-serif;font-size:17px;font-weight:700;color:#C890FF;letter-spacing:1px}
+.admin-close-btn{background:transparent;border:1px solid #3A0060;color:#888;font-size:11px;padding:6px 12px;border-radius:8px;cursor:pointer}
+.admin-body{padding:18px 16px;flex:1}
+.admin-section{background:#141414;border:1px solid #2A2A2A;border-radius:16px;padding:16px;margin-bottom:16px}
+.admin-sec-title{font-family:"Sora",sans-serif;font-size:13px;font-weight:700;color:#C890FF;margin-bottom:14px;letter-spacing:1px;text-transform:uppercase}
+.admin-input{width:100%;background:#1C1C1C;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;color:#F0EDE8;font-size:14px;margin-bottom:10px;outline:none;font-family:"DM Sans",sans-serif}
+.admin-input:focus{border-color:#8B60FF}
+.admin-btn{width:100%;padding:13px;border:none;border-radius:11px;font-family:"Sora",sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px}
+.admin-btn.approve{background:linear-gradient(135deg,#27AE60,#1A7A3A);color:#fff}
+.admin-btn.reject{background:linear-gradient(135deg,#C0392B,#7A1A1A);color:#fff}
+.admin-btn.send-w{background:#25D366;color:#fff}
+.admin-queue{margin-top:4px}
+.queue-item{background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.qi-name{font-family:"Sora",sans-serif;font-size:13px;font-weight:600;color:#F0EDE8;margin-bottom:3px}
+.qi-detail{font-size:12px;color:#888;margin-bottom:8px;line-height:1.6}
+.qi-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qi-approve{background:linear-gradient(135deg,#27AE60,#1A7A3A);color:#fff;border:none;padding:9px;border-radius:9px;font-family:"Sora",sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.qi-reject{background:#2A0A0A;color:#E74C3C;border:1px solid #5A1A1A;padding:9px;border-radius:9px;font-family:"Sora",sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.empty-queue{text-align:center;padding:20px;color:#888;font-size:13px}
+#adminPassScreen{position:fixed;inset:0;background:#0A0A0A;z-index:997;display:none;align-items:center;justify-content:center;padding:24px}
+#adminPassScreen.open{display:flex}
+.admin-pass-card{background:#141414;border:1px solid #2A0060;border-radius:20px;padding:28px 22px;width:100%;max-width:360px}
+.admin-pass-title{font-family:"Sora",sans-serif;font-size:18px;font-weight:700;color:#C890FF;margin-bottom:4px}
+.admin-pass-sub{font-size:12px;color:#888;margin-bottom:20px}
+/* TOP BAR */
+.topbar{background:linear-gradient(135deg,#1a0a00,#2d1500);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #3A2000}
+.logo{font-family:"Sora",sans-serif;font-size:19px;font-weight:700;color:var(--gold2);letter-spacing:2px;cursor:pointer}
+.logo span{color:var(--red)}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--red));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+/* WALLET BAR */
+.wallet-bar{background:linear-gradient(135deg,#1C1000,#2A1800);border-bottom:1px solid #3A2000;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.wb-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.wb-amount{font-family:"Sora",sans-serif;font-size:22px;font-weight:700;color:var(--gold2)}
+.wb-status{font-size:11px;margin-top:2px}
+.wb-status.recharged{color:var(--green)}
+.wb-status.empty{color:var(--muted)}
+.wb-add-btn{background:linear-gradient(135deg,var(--gold),#8B6000);border:none;color:#fff;font-family:"Sora",sans-serif;font-size:11px;font-weight:600;padding:8px 14px;border-radius:10px;cursor:pointer}
+/* MAIN */
+.main{padding-bottom:90px;min-height:calc(100vh - 56px);overflow-y:auto}
+.tab-content{display:none}.tab-content.active{display:block}
+/* NAV */
+.bottomnav{position:fixed;bottom:0;left:0;right:0;background:#0E0E0E;border-top:1px solid var(--border);display:flex;z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 0;cursor:pointer;gap:3px}
+.nav-item svg{width:21px;height:21px;stroke:var(--muted);fill:none;stroke-width:1.8}
+.nav-item span{font-size:10px;color:var(--muted);font-family:"Sora",sans-serif;letter-spacing:.4px}
+.nav-item.active svg{stroke:var(--gold2)}
+.nav-item.active span{color:var(--gold2)}
+/* HOME */
+.hero{background:linear-gradient(160deg,#1a0800,#2C1000,#0A0A0A);padding:24px 18px 30px;position:relative;overflow:hidden}
+.hero-label{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.hero-title{font-family:"Sora",sans-serif;font-size:25px;font-weight:700;line-height:1.2}
+.hero-title em{color:var(--gold2);font-style:normal}
+.hero-sub{font-size:13px;color:var(--muted);margin-top:7px}
+.tag{display:inline-block;background:#2A1800;border:1px solid #5A3300;color:var(--gold);font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:20px;margin-top:10px}
+.sec-title{font-family:"Sora",sans-serif;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding:16px 16px 8px}
+/* COMPANY CARDS */
+.company-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 4px}
+.company-card{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden;cursor:pointer;transition:.2s}
+.company-card:hover{border-color:#5A3300;transform:translateY(-2px)}
+.c-img{width:100%;height:110px;object-fit:cover;display:block;filter:brightness(1.05) saturate(1.2)}
+.c-info{padding:9px 11px}
+.c-name{font-family:"Sora",sans-serif;font-size:13px;font-weight:600;margin-bottom:2px}
+.c-desc{font-size:11px;color:var(--muted);line-height:1.4}
+.china-badge{background:#8B0000;color:#FFB3B3;font-size:9px;padding:2px 7px;border-radius:9px;display:inline-block;margin-top:4px}
+/* ABOUT */
+.about-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 14px 20px}
+.about-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 10px;cursor:pointer;transition:.2s}
+.about-card:hover{border-color:#5A3300}
+.about-icon{font-size:20px;margin-bottom:6px}
+.about-title{font-family:"Sora",sans-serif;font-size:12px;font-weight:600;margin-bottom:4px}
+.about-text{font-size:10px;color:var(--muted);line-height:1.5}
+/* INFO MODAL */
+.info-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.info-overlay.open{display:flex}
+.info-modal{background:#161616;border-radius:22px 22px 0 0;padding:24px 20px 44px;width:100%;max-width:480px;border-top:1px solid #2A2A2A;position:relative;max-height:80vh;overflow-y:auto}
+.info-modal-title{font-family:"Sora",sans-serif;font-size:17px;font-weight:700;margin-bottom:12px;color:var(--gold2)}
+.info-modal-body{font-size:13px;color:var(--muted);line-height:1.9}
+.info-close{position:absolute;top:14px;right:16px;background:var(--card2);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center}
+/* PRODUCTS */
+.product-list{padding:12px 14px;display:flex;flex-direction:column;gap:13px}
+.product-card{background:var(--card);border:1px solid var(--border);border-radius:15px;overflow:hidden;position:relative}
+.product-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(to bottom,var(--gold),var(--gold2));z-index:1}
+.p-img-wrap{width:100%;height:145px;overflow:hidden;position:relative}
+.p-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(1.08) saturate(1.25)}
+.p-img-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.05) 0%,transparent 30%,rgba(0,0,0,.75) 100%)}
+.p-badge{position:absolute;top:9px;right:9px;background:rgba(0,0,0,.7);border:1px solid var(--gold);color:var(--gold2);font-size:10px;font-family:"Sora",sans-serif;font-weight:700;padding:3px 10px;border-radius:20px}
+.p-overlay-text{position:absolute;bottom:9px;left:14px}
+.p-overlay-name{font-family:"Sora",sans-serif;font-size:14px;font-weight:700;color:#fff}
+.p-overlay-gain{font-size:12px;color:#7EDB7E;margin-top:2px}
+.p-bottom{padding:11px 14px;display:flex;align-items:center;justify-content:space-between}
+.p-price{font-family:"Sora",sans-serif;font-size:19px;font-weight:700;color:var(--gold2)}
+.p-price span{font-size:11px;color:var(--muted);font-weight:400}
+.p-daily{font-size:12px;color:var(--green);margin-top:2px}
+.buy-btn{background:linear-gradient(135deg,var(--gold),#8B6000);color:#fff;border:none;padding:10px 18px;border-radius:10px;font-family:"Sora",sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.buy-btn:disabled{background:#2A2A2A;color:var(--muted);cursor:not-allowed}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:250;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#161616;border-radius:22px 22px 0 0;padding:22px 18px 44px;width:100%;max-width:480px;border-top:1px solid #2A2A2A;position:relative;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:"Sora",sans-serif;font-size:17px;font-weight:700;margin-bottom:3px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+.modal-amount{font-family:"Sora",sans-serif;font-size:25px;font-weight:700;color:var(--gold2);margin-bottom:4px}
+.modal-daily-note{font-size:12px;color:var(--green);margin-bottom:16px}
+.dep-box{background:#1C1400;border:1px solid #4A3000;border-radius:12px;padding:13px;margin-bottom:16px}
+.dep-box-title{font-size:10px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px}
+.dep-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.dep-lbl{font-size:12px;color:var(--muted)}
+.dep-val{font-family:"Sora",sans-serif;font-size:12px;font-weight:600;color:var(--text)}
+.dep-note{font-size:11px;color:var(--muted);margin-top:9px;border-top:1px solid #2A1800;padding-top:9px;line-height:1.7}
+.pay-label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px}
+.pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.pay-method{border:2px solid var(--border);border-radius:11px;padding:12px;text-align:center;cursor:pointer;transition:.2s}
+.pay-method:hover,.pay-method.selected{border-color:var(--gold);background:#1C1400}
+.pm-logo{font-size:28px;margin-bottom:5px}
+.pm-name{font-family:"Sora",sans-serif;font-size:12px;font-weight:600}
+.pm-desc{font-size:10px;color:var(--muted);margin-top:2px}
+.field-input{width:100%;background:#1C1C1C;border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;margin-bottom:12px;outline:none;font-family:"DM Sans",sans-serif}
+.field-input:focus{border-color:var(--gold)}
+.confirm-btn{width:100%;background:linear-gradient(135deg,var(--gold),#8B6000);color:#fff;border:none;padding:14px;border-radius:12px;font-family:"Sora",sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+.modal-close{position:absolute;top:14px;right:16px;background:var(--card2);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center}
+/* CHAT */
+.community-wrap{display:flex;flex-direction:column;height:calc(100vh - 140px)}
+.chat-area{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:11px}
+.chat-bubble-wrap{display:flex;gap:8px;align-items:flex-start}
+.chat-initials{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3A2000,#6A4000);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gold2);flex-shrink:0}
+.chat-meta{font-size:10px;color:var(--muted);margin-bottom:3px}
+.chat-msg{max-width:260px;padding:10px 13px;border-radius:4px 14px 14px 14px;font-size:13px;line-height:1.5;background:var(--card2)}
+.chat-msg.me{background:linear-gradient(135deg,#3A2000,#5A3000);border-radius:14px 4px 14px 14px}
+.my-wrap{display:flex;flex-direction:column;align-items:flex-end}
+.chat-input-row{padding:11px 14px;border-top:1px solid var(--border);display:flex;gap:9px;background:#0E0E0E}
+.chat-input{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:22px;padding:10px 15px;color:var(--text);font-size:13px;outline:none;font-family:"DM Sans",sans-serif}
+.send-btn{background:linear-gradient(135deg,var(--gold),#8B6000);border:none;border-radius:50%;width:38px;height:38px;color:#fff;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* MINES */
+.mines-wrap{padding:0 0 30px}
+.balance-card{background:linear-gradient(135deg,#1C0E00,#2C1800);margin:16px 14px;border-radius:18px;padding:20px 18px;border:1px solid #3A2000;position:relative;overflow:hidden}
+.balance-card::after{content:"💰";position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:52px;opacity:.1}
+.bal-label{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.bal-amount{font-family:"Sora",sans-serif;font-size:28px;font-weight:700;color:var(--gold2)}
+.bal-daily{font-size:13px;color:var(--green);margin-top:4px}
+.bal-plan{font-size:11px;color:var(--muted);margin-top:3px}
+.next-credit{font-size:11px;color:var(--gold);margin-top:7px;background:#1C1000;padding:5px 10px;border-radius:8px;display:inline-block}
+.cd-wrap{margin:0 14px 14px;background:var(--card);border:1px solid var(--border);border-radius:15px;padding:15px}
+.cd-title{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px}
+.cd-bar-bg{background:#1C1C1C;border-radius:6px;height:9px;overflow:hidden;margin-bottom:7px}
+.cd-bar-fill{height:100%;background:linear-gradient(to right,var(--gold),var(--gold2));border-radius:6px;transition:width .5s}
+.cd-info{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.cd-days{font-family:"Sora",sans-serif;font-size:21px;font-weight:700;text-align:center;margin:7px 0 3px}
+.cd-days-label{text-align:center;font-size:11px;color:var(--muted);margin-bottom:12px}
+.withdraw-btn-wrap{padding:0 14px 14px}
+.withdraw-btn{display:block;width:100%;background:#1C1C1C;border:1px solid var(--border);color:var(--muted);padding:13px;border-radius:12px;font-family:"Sora",sans-serif;font-size:13px;cursor:not-allowed;text-align:center}
+.withdraw-btn.enabled{background:linear-gradient(135deg,var(--green),#1A7A3A);color:#fff;border:none;cursor:pointer}
+/* WITHDRAW MODAL */
+.withdraw-modal{background:#161616;border-radius:22px 22px 0 0;padding:22px 18px 44px;width:100%;max-width:480px;border-top:1px solid #2A2A2A;position:relative}
+.wm-title{font-family:"Sora",sans-serif;font-size:17px;font-weight:700;margin-bottom:4px;color:var(--gold2)}
+.wm-avail{font-size:12px;color:var(--green);margin-bottom:18px}
+.wm-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;display:block}
+.wm-preview{background:#1C1C1C;border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-family:"Sora",sans-serif;font-size:18px;font-weight:700;color:var(--gold2);margin-bottom:14px;min-height:44px}
+.dest-methods{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+/* DEPOSIT TIERS */
+.dep-section{margin:0 14px 14px;background:var(--card);border:1px solid var(--border);border-radius:15px;overflow:hidden}
+.dep-sec-hdr{background:#1C1400;padding:12px 14px;border-bottom:1px solid var(--border)}
+.dep-sec-hdr-title{font-family:"Sora",sans-serif;font-size:13px;font-weight:700;color:var(--gold2)}
+.dep-sec-hdr-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.dep-tiers{padding:10px 14px;display:flex;flex-direction:column;gap:7px}
+.dep-tier{display:flex;align-items:center;gap:11px;background:#1A1A1A;border:1px solid var(--border);border-radius:11px;padding:11px 12px;cursor:pointer;transition:.2s}
+.dep-tier:hover,.dep-tier.sel{border-color:var(--gold);background:#1C1400}
+.dt-amt{font-family:"Sora",sans-serif;font-size:14px;font-weight:700;color:var(--gold2);min-width:66px}
+.dt-earn{font-size:12px;color:var(--green)}
+.dt-lbl{font-size:10px;color:var(--muted);margin-top:1px}
+.dt-btn{margin-left:auto;background:linear-gradient(135deg,var(--gold),#8B6000);color:#fff;border:none;padding:7px 13px;border-radius:8px;font-family:"Sora",sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.pay-info-box{margin:0 14px 14px;background:#0E0C00;border:1px solid #3A2800;border-radius:13px;padding:14px}
+.pib-title{font-size:10px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:11px}
+.pib-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;gap:8px}
+.pib-lbl{font-size:12px;color:var(--muted);white-space:nowrap}
+.pib-val{font-family:"Sora",sans-serif;font-size:12px;font-weight:600;color:var(--text);text-align:right}
+.pib-note{font-size:11px;color:var(--muted);border-top:1px solid #2A2000;padding-top:9px;margin-top:4px;line-height:1.8}
+.plan-table{margin:0 14px 14px;background:var(--card);border:1px solid var(--border);border-radius:15px;overflow:hidden}
+.plan-row{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border);gap:11px}
+.plan-row:last-child{border-bottom:none}
+.plan-row.act{background:#1C1400}
+.plan-dot{width:9px;height:9px;border-radius:50%;background:var(--border);flex-shrink:0}
+.plan-row.act .plan-dot{background:var(--gold2)}
+.plan-invest{font-family:"Sora",sans-serif;font-size:13px;font-weight:600}
+.plan-sublabel{font-size:10px;color:var(--muted);margin-top:1px}
+.plan-earn{font-size:12px;color:var(--green)}
+.policy-box{margin:0 14px 14px;background:#0C0C0C;border:1px solid #1A1A1A;border-radius:12px;padding:13px}
+.policy-title{font-size:10px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.policy-text{font-size:12px;color:var(--muted);line-height:1.9}
+.no-inv{text-align:center;padding:28px 18px;color:var(--muted);font-size:14px}
+.no-inv a{color:var(--gold2);cursor:pointer}
+.lbl{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:block}
+.login-err{font-size:12px;color:#E74C3C;margin-bottom:12px;display:none;background:#2A0A0A;padding:8px 12px;border-radius:8px}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--gold),#8B6000);color:#fff;border:none;padding:14px;border-radius:12px;font-family:"Sora",sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1C3A1C;border:1px solid var(--green);color:#7EDB7E;padding:9px 18px;border-radius:10px;font-size:13px;z-index:500;display:none;white-space:nowrap}
+.toast.show{display:block;animation:fadeInOut 3.2s forwards}
+@keyframes fadeInOut{0%{opacity:0;top:60px}10%{opacity:1;top:70px}80%{opacity:1}100%{opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo" onclick="adminTap()"><span>&#9889;</span> RECHARGE</div>
+  <div class="avatar">R</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- HOME -->
+  <div class="tab-content active" id="tab-home">
+    <div class="hero">
+      <div class="hero-label">Welcome to</div>
+      <div class="hero-title"><em>Recharge</em><br>Invest &amp; Earn Daily</div>
+      <div class="hero-sub">Premium Chinese brands. Real daily returns. Start from just 100 GHS.</div>
+      <div class="tag">&#127464;&#127475; VERIFIED CHINESE PARTNERS</div>
+    </div>
+    <div class="sec-title">Top Chinese Brands</div>
+    <div class="company-grid">
+      <div class="company-card" onclick="switchTab('products')">
+        <img class="c-img" src="https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=400&q=90" alt="DJI Drone">
+        <div class="c-info"><div class="c-name">DJI Global</div><div class="c-desc">Professional drones &amp; aerial tech</div><div class="china-badge">&#127464;&#127475; China</div></div>
+      </div>
+      <div class="company-card" onclick="switchTab('products')">
+        <img class="c-img" src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&q=90" alt="Huawei">
+        <div class="c-info"><div class="c-name">Huawei</div><div class="c-desc">Flagship smartphones &amp; 5G tech</div><div class="china-badge">&#127464;&#127475; China</div></div>
+      </div>
+      <div class="company-card" onclick="switchTab('products')">
+        <img class="c-img" src="https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=400&q=90" alt="BYD">
+        <div class="c-info"><div class="c-name">BYD Motors</div><div class="c-desc">Electric vehicles &amp; clean energy</div><div class="china-badge">&#127464;&#127475; China</div></div>
+      </div>
+      <div class="company-card" onclick="switchTab('products')">
+        <img class="c-img" src="https://images.unsplash.com/photo-1620714223084-8fcacc2dbed5?w=400&q=90" alt="CATL">
+        <div class="c-info"><div class="c-name">CATL Energy</div><div class="c-desc">Battery tech &amp; solar power</div><div class="china-badge">&#127464;&#127475; China</div></div>
+      </div>
+    </div>
+    <div class="sec-title">How It Works</div>
+    <div style="padding:0 14px 6px;display:flex;flex-direction:column;gap:9px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;display:flex;gap:11px;align-items:center"><div style="font-size:21px">1&#65039;&#8419;</div><div><div style="font-family:Sora,sans-serif;font-size:13px;font-weight:600">Deposit via MTN / Telecel</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Send to our official deposit number</div></div></div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;display:flex;gap:11px;align-items:center"><div style="font-size:21px">2&#65039;&#8419;</div><div><div style="font-family:Sora,sans-serif;font-size:13px;font-weight:600">Recharge Appears on Products</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Your balance shown at top of Products</div></div></div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;display:flex;gap:11px;align-items:center"><div style="font-size:21px">3&#65039;&#8419;</div><div><div style="font-family:Sora,sans-serif;font-size:13px;font-weight:600">Buy the Matching Package</div><div style="font-size:11px;color:var(--muted);margin-top:2px">100 GHS balance buys 100 GHS plan</div></div></div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;display:flex;gap:11px;align-items:center"><div style="font-size:21px">4&#65039;&#8419;</div><div><div style="font-family:Sora,sans-serif;font-size:13px;font-weight:600">Earn Daily &mdash; Withdraw in 5 Days</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Revenue appears same time next day</div></div></div>
+    </div>
+    <div class="sec-title">About Us</div>
+    <div class="about-grid">
+      <div class="about-card" onclick="openInfo('about')"><div class="about-icon">&#127970;</div><div class="about-title">About Us</div><div class="about-text">Who we are &amp; our story</div></div>
+      <div class="about-card" onclick="openInfo('support')"><div class="about-icon">&#128231;</div><div class="about-title">Customer Service</div><div class="about-text">Email us anytime</div></div>
+      <div class="about-card" onclick="openInfo('regulations')"><div class="about-icon">&#128220;</div><div class="about-title">Regulations</div><div class="about-text">Policies &amp; compliance</div></div>
+    </div>
+    <div style="height:10px"></div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="tab-content" id="tab-products">
+    <div class="wallet-bar">
+      <div>
+        <div class="wb-label">Recharged Balance</div>
+        <div class="wb-amount" id="walletAmt">GHS 0.00</div>
+        <div class="wb-status empty" id="walletStatus">No deposit yet</div>
+      </div>
+      <button class="wb-add-btn" onclick="openTopupModal()">+ Recharge</button>
+    </div>
+    <div style="padding:14px 14px 4px;display:flex;align-items:center;gap:10px">
+      <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--gold),#8B6000);display:flex;align-items:center;justify-content:center;font-size:19px">&#127981;</div>
+      <div><div style="font-family:Sora,sans-serif;font-size:14px;font-weight:700">Investment Packages</div><div style="font-size:11px;color:var(--muted);margin-top:1px">Recharge first, then buy the matching plan</div></div>
+    </div>
+    <div class="product-list">
+      <div class="product-card"><div class="p-img-wrap"><img src="https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=700&q=90" alt="Starter"><div class="p-img-overlay"></div><div class="p-badge">STARTER</div><div class="p-overlay-text"><div class="p-overlay-name">Starter Package</div><div class="p-overlay-gain">+25 GHS daily revenue</div></div></div><div class="p-bottom"><div><div class="p-price">100 <span>GHS</span></div><div class="p-daily">25 GHS / day</div></div><button class="buy-btn" id="btn-100" onclick="openModal('Starter Package',100,25)">BUY NOW</button></div></div>
+      <div class="product-card"><div class="p-img-wrap"><img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=700&q=90" alt="Silver"><div class="p-img-overlay"></div><div class="p-badge">SILVER</div><div class="p-overlay-text"><div class="p-overlay-name">Silver Package</div><div class="p-overlay-gain">+65 GHS daily revenue</div></div></div><div class="p-bottom"><div><div class="p-price">250 <span>GHS</span></div><div class="p-daily">65 GHS / day</div></div><button class="buy-btn" id="btn-250" onclick="openModal('Silver Package',250,65)">BUY NOW</button></div></div>
+      <div class="product-card"><div class="p-img-wrap"><img src="https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=700&q=90" alt="Gold"><div class="p-img-overlay"></div><div class="p-badge">GOLD</div><div class="p-overlay-text"><div class="p-overlay-name">Gold Package</div><div class="p-overlay-gain">+130 GHS daily revenue</div></div></div><div class="p-bottom"><div><div class="p-price">500 <span>GHS</span></div><div class="p-daily">130 GHS / day</div></div><button class="buy-btn" id="btn-500" onclick="openModal('Gold Package',500,130)">BUY NOW</button></div></div>
+      <div class="product-card"><div class="p-img-wrap"><img src="https://images.unsplash.com/photo-1548092372-0d1bd40894a3?w=700&q=90" alt="Platinum"><div class="p-img-overlay"></div><div class="p-badge">PLATINUM</div><div class="p-overlay-text"><div class="p-overlay-name">Platinum Package</div><div class="p-overlay-gain">+270 GHS daily revenue</div></div></div><div class="p-bottom"><div><div class="p-price">1,000 <span>GHS</span></div><div class="p-daily">270 GHS / day</div></div><button class="buy-btn" id="btn-1000" onclick="openModal('Platinum Package',1000,270)">BUY NOW</button></div></div>
+      <div class="product-card"><div class="p-img-wrap"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=700&q=90" alt="VIP"><div class="p-img-overlay"></div><div class="p-badge">VIP</div><div class="p-overlay-text"><div class="p-overlay-name">VIP Package</div><div class="p-overlay-gain">+520 GHS daily revenue</div></div></div><div class="p-bottom"><div><div class="p-price">2,000 <span>GHS</span></div><div class="p-daily">520 GHS / day</div></div><button class="buy-btn" id="btn-2000" onclick="openModal('VIP Package',2000,520)">BUY NOW</button></div></div>
+    </div>
+  </div>
+
+  <!-- COMMUNITY -->
+  <div class="tab-content" id="tab-assistant">
+    <div style="padding:16px 16px 10px;border-bottom:1px solid var(--border)">
+      <div style="font-family:Sora,sans-serif;font-size:15px;font-weight:700">&#128172; Community Chat</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">Investors across Africa &middot; Support: rechargeinvestgh@outlook.com</div>
+    </div>
+    <div class="community-wrap">
+      <div class="chat-area" id="chatArea">
+        <div class="chat-bubble-wrap"><div class="chat-initials">AD</div><div><div class="chat-meta">&#127468;&#127469; Admin &middot; 8:00 AM</div><div class="chat-msg">Welcome to Recharge! Invest smart, earn daily. MTN &amp; Telecel accepted across Africa.</div></div></div>
+        <div class="chat-bubble-wrap"><div class="chat-initials" style="background:linear-gradient(135deg,#006400,#1A3A00);color:#7EDB7E">KO</div><div><div class="chat-meta">&#127475;&#127468; Kola Obi &middot; Nigeria &middot; 8:14 AM</div><div class="chat-msg">Invested 500 GHS via MTN Nigeria. Revenue hit exactly 24 hours later &mdash; 130 GHS! Legit platform!</div></div></div>
+        <div class="chat-bubble-wrap"><div class="chat-initials" style="background:linear-gradient(135deg,#003580,#001A4A);color:#90B8FF">AB</div><div><div class="chat-meta">&#127468;&#127469; Abena M. &middot; Ghana &middot; 8:32 AM</div><div class="chat-msg">Upgraded from 250 to 1000 plan. 65 GHS/day to 270 GHS/day. Best upgrade ever!</div></div></div>
+        <div class="chat-bubble-wrap"><div class="chat-initials" style="background:linear-gradient(135deg,#5A0000,#2A0000);color:#FF9090">CH</div><div><div class="chat-meta">&#127464;&#127474; Claude H. &middot; Cameroon &middot; 9:01 AM</div><div class="chat-msg">MTN Cameroon user. Sent money, got recharged, bought Gold plan. Next day &mdash; 130 GHS!</div></div></div>
+        <div class="chat-bubble-wrap"><div class="chat-initials" style="background:linear-gradient(135deg,#4A3000,#2A1800);color:#F5C842">KW</div><div><div class="chat-meta">&#127468;&#127469; Kwame D. &middot; Ghana &middot; 9:45 AM</div><div class="chat-msg">Telecel Cash works perfectly. Paid at 3PM, next day 3PM &mdash; 25 GHS return. Very punctual!</div></div></div>
+        <div class="chat-bubble-wrap"><div class="chat-initials" style="background:linear-gradient(135deg,#2A005A,#14002A);color:#C890FF">AM</div><div><div class="chat-meta">&#127487;&#127462; Amara M. &middot; South Africa &middot; 10:30 AM</div><div class="chat-msg">MTN South Africa user &mdash; VIP plan, 520 GHS daily. Recharge is REAL!</div></div></div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput" placeholder="Write a message..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="send-btn" onclick="sendChat()">&#10148;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MINES -->
+  <div class="tab-content" id="tab-mines">
+    <div class="mines-wrap" id="minesContent"></div>
+  </div>
+
+</div>
+
+<!-- NAV -->
+<div class="bottomnav">
+  <div class="nav-item active" onclick="switchTab('home')" id="nav-home"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></div>
+  <div class="nav-item" onclick="switchTab('products')" id="nav-products"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>Products</span></div>
+  <div class="nav-item" onclick="switchTab('assistant')" id="nav-assistant"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Assistant</span></div>
+  <div class="nav-item" onclick="switchTab('mines')" id="nav-mines"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Mines</span></div>
+</div>
+
+<!-- ADMIN PASS -->
+<div id="adminPassScreen">
+  <div class="admin-pass-card">
+    <div class="admin-pass-title">&#128272; Admin Access</div>
+    <div class="admin-pass-sub">Enter your secret admin password</div>
+    <div class="login-err" id="adminPassErr"></div>
+    <label class="lbl">Admin Password</label>
+    <input class="admin-input" id="adminPassInput" type="password" placeholder="Enter admin password">
+    <button class="login-btn" onclick="checkAdminPass()" style="background:linear-gradient(135deg,#6A00FF,#3A0080)">Enter Admin Panel</button>
+    <button onclick="closeAdminPass()" style="width:100%;margin-top:10px;background:transparent;border:1px solid #2A2A2A;color:#888;padding:11px;border-radius:11px;font-family:Sora,sans-serif;font-size:13px;cursor:pointer">Cancel</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminScreen">
+  <div class="admin-topbar">
+    <div class="admin-title">&#9889; RECHARGE ADMIN</div>
+    <button class="admin-close-btn" onclick="closeAdmin()">&#10005; Close</button>
+  </div>
+  <div class="admin-body">
+    <div class="admin-section">
+      <div class="admin-sec-title">Approve a Deposit</div>
+      <label class="lbl">Investor Phone Number</label>
+      <input class="admin-input" id="approvePhone" type="tel" placeholder="e.g. 0244123456">
+      <label class="lbl">Investor Name</label>
+      <input class="admin-input" id="approveName" type="text" placeholder="Name on WhatsApp message">
+      <label class="lbl">Amount They Sent (GHS)</label>
+      <input class="admin-input" id="approveAmt" type="number" placeholder="100, 250, 500, 1000 or 2000">
+      <button class="admin-btn approve" onclick="approveDeposit()">Approve &amp; Notify via WhatsApp</button>
+      <button class="admin-btn reject" onclick="rejectDeposit()">Reject &amp; Notify via WhatsApp</button>
+    </div>
+    <div class="admin-section">
+      <div class="admin-sec-title">Pending Requests</div>
+      <div class="admin-queue" id="adminQueue"></div>
+    </div>
+    <div class="admin-section">
+      <div class="admin-sec-title">Send WhatsApp Message</div>
+      <label class="lbl">Investor Phone</label>
+      <input class="admin-input" id="customPhone" type="tel" placeholder="e.g. 0244123456">
+      <label class="lbl">Message</label>
+      <textarea class="admin-input" id="customMsg" rows="3" placeholder="Type your message..."></textarea>
+      <button class="admin-btn send-w" onclick="sendCustomWA()">Send via WhatsApp</button>
+    </div>
+    <div class="admin-section" id="adminStats"></div>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&#10005;</button>
+    <div class="modal-title" id="modalTitle">Package</div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="modal-amount" id="modalAmount"></div>
+    <div class="modal-daily-note" id="modalNote">Revenue reflects 24 hours after payment</div>
+    <div class="dep-box">
+      <div class="dep-box-title">Send Payment To:</div>
+      <div class="dep-row"><span class="dep-lbl">Account Name</span><span class="dep-val">Recharge Investment Ltd, Gh</span></div>
+      <div class="dep-row"><span class="dep-lbl">Network</span><span class="dep-val">Telecel Cash Only</span></div>
+      <div class="dep-row"><span class="dep-lbl">Number</span><span class="dep-val">0506072622</span></div>
+      <div class="dep-row"><span class="dep-lbl">Reference</span><span class="dep-val">Albert Manu</span></div>
+      <div class="dep-note">Send your exact amount to 0506072622 (Telecel). After sending tap the button below to notify admin.</div>
+      <button onclick="sendDepositScreenshotWA()" style="margin-top:10px;width:100%;background:#25D366;color:#fff;border:none;padding:11px;border-radius:10px;font-family:Sora,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Send Payment Screenshot via WhatsApp</button>
+    </div>
+    <div class="pay-label">I paid via</div>
+    <div class="pay-methods">
+      <div class="pay-method selected" id="pm-mtn" onclick="selectPay('mtn')"><div class="pm-logo">&#128241;</div><div class="pm-name">MTN MoMo</div><div class="pm-desc">Mobile Money</div></div>
+      <div class="pay-method" id="pm-telecel" onclick="selectPay('telecel')"><div class="pm-logo">&#128225;</div><div class="pm-name">Telecel Cash</div><div class="pm-desc">Mobile Money</div></div>
+    </div>
+    <input class="field-input" id="phoneInput" type="tel" placeholder="Your phone number (e.g. 0244123456)">
+    <button class="confirm-btn" onclick="confirmPurchase()">Confirm Payment &amp; Activate</button>
+  </div>
+</div>
+
+<!-- TOPUP MODAL -->
+<div class="modal-overlay" id="topupOverlay" onclick="if(event.target===this)closeTopup()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeTopup()">&#10005;</button>
+    <div class="modal-title">Recharge Account</div>
+    <div class="modal-sub" style="margin-bottom:14px">Send to our Telecel number, then confirm here</div>
+    <div class="dep-box">
+      <div class="dep-box-title">Send Payment To:</div>
+      <div class="dep-row"><span class="dep-lbl">Account Name</span><span class="dep-val">Recharge Investment Ltd, Gh</span></div>
+      <div class="dep-row"><span class="dep-lbl">Network</span><span class="dep-val">Telecel Cash Only</span></div>
+      <div class="dep-row"><span class="dep-lbl">Number</span><span class="dep-val">0506072622</span></div>
+      <div class="dep-row"><span class="dep-lbl">Reference</span><span class="dep-val">Albert Manu</span></div>
+    </div>
+    <label class="pay-label">Amount Sent (GHS)</label>
+    <input class="field-input" id="topupAmt" type="number" placeholder="100, 250, 500, 1000 or 2000">
+    <label class="pay-label">Your Phone Number</label>
+    <input class="field-input" id="topupPhone" type="tel" placeholder="Your phone number">
+    <button class="confirm-btn" onclick="confirmTopup()">Confirm Recharge</button>
+  </div>
+</div>
+
+<!-- WITHDRAW MODAL -->
+<div class="modal-overlay" id="withdrawOverlay" onclick="if(event.target===this)closeWithdraw()">
+  <div class="modal withdraw-modal">
+    <button class="modal-close" onclick="closeWithdraw()">&#10005;</button>
+    <div class="wm-title">Withdraw Earnings</div>
+    <div class="wm-avail" id="wmAvail">Available: GHS 0</div>
+    <label class="wm-label">Amount to Withdraw (GHS)</label>
+    <input class="field-input" id="wmAmt" type="number" placeholder="e.g. 100" oninput="updateWmPreview()">
+    <div class="wm-preview" id="wmPreview" style="color:var(--muted);font-size:14px;font-weight:400">Enter amount above...</div>
+    <label class="wm-label" style="margin-top:4px">Withdrawal Destination</label>
+    <div class="dest-methods">
+      <div class="pay-method selected" id="wm-mtn" onclick="selWm('mtn')"><div class="pm-logo">&#128241;</div><div class="pm-name">MTN MoMo</div></div>
+      <div class="pay-method" id="wm-telecel" onclick="selWm('telecel')"><div class="pm-logo">&#128225;</div><div class="pm-name">Telecel Cash</div></div>
+    </div>
+    <label class="wm-label">Phone Number</label>
+    <input class="field-input" id="wmPhone" type="tel" placeholder="Number to receive funds">
+    <label class="wm-label">MoMo Account Name</label>
+    <input class="field-input" id="wmName" type="text" placeholder="Name on the MoMo account">
+    <button class="confirm-btn" onclick="submitWithdraw()">Send Withdrawal Request</button>
+  </div>
+</div>
+
+<!-- INFO MODAL -->
+<div class="info-overlay" id="infoOverlay" onclick="if(event.target===this)closeInfo()">
+  <div class="info-modal">
+    <button class="info-close" onclick="closeInfo()">&#10005;</button>
+    <div class="info-modal-title" id="infoTitle"></div>
+    <div class="info-modal-body" id="infoBody"></div>
+  </div>
+</div>
+
+<!-- FLOATING WHATSAPP -->
+<a href="mailto:rechargeinvestgh@outlook.com" style="position:fixed;bottom:96px;right:16px;z-index:150;background:#D4A017;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;text-decoration:none;box-shadow:0 4px 16px rgba(212,160,23,.5)" title="Email Support">&#128231;</a>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ADMIN_WA = "233506072622";
+const ADMIN_PASSWORD = "recharge2024admin";
+const PLANS = [{p:100,d:25},{p:250,d:65},{p:500,d:130},{p:1000,d:270},{p:2000,d:520}];
+const PLAN_NAMES = {100:"Starter Package",250:"Silver Package",500:"Gold Package",1000:"Platinum Package",2000:"VIP Package"};
+let selectedPay = "mtn", selectedWm = "mtn", curProduct = {};
+let adminTapCount = 0, adminTapTimer = null;
+
+function openWA(msg){ window.open("https://wa.me/"+ADMIN_WA+"?text="+encodeURIComponent(msg),"_blank"); }
+function showToast(msg){ var t=document.getElementById("toast"); t.textContent=msg; t.className="toast show"; setTimeout(function(){t.className="toast";},3500); }
+function S_get(k){ try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;} }
+function S_set(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} }
+
+// TABS
+function switchTab(tab){
+  document.querySelectorAll(".tab-content").forEach(function(t){t.classList.remove("active");});
+  document.querySelectorAll(".nav-item").forEach(function(n){n.classList.remove("active");});
+  document.getElementById("tab-"+tab).classList.add("active");
+  document.getElementById("nav-"+tab).classList.add("active");
+  if(tab==="products"){ checkApprovalForUser(); updateWalletBar(); refreshBuyButtons(); }
+  if(tab==="mines"){ renderMines(); }
+}
+
+// WALLET
+function getWallet(){ return parseFloat(S_get("rch_wallet")||0); }
+function setWallet(v){ S_set("rch_wallet",v); }
+function updateWalletBar(){
+  var bal = getWallet();
+  document.getElementById("walletAmt").textContent = "GHS "+bal.toLocaleString("en-GH",{minimumFractionDigits:2,maximumFractionDigits:2});
+  var st = document.getElementById("walletStatus");
+  if(bal>0){ st.textContent="Recharged - buy the matching plan below"; st.className="wb-status recharged"; }
+  else { st.textContent="No deposit yet - send to deposit number, then recharge"; st.className="wb-status empty"; }
+}
+function refreshBuyButtons(){
+  var bal = getWallet();
+  PLANS.forEach(function(pl){
+    var btn = document.getElementById("btn-"+pl.p);
+    if(!btn) return;
+    if(bal===pl.p){ btn.disabled=false; btn.textContent="BUY NOW"; }
+    else if(bal>0){ btn.disabled=true; btn.textContent=bal<pl.p?"Insufficient":"Wrong Plan"; }
+    else { btn.disabled=false; btn.textContent="BUY NOW"; }
+  });
+}
+function checkApprovalForUser(){
+  var approvals = {};
+  try{ approvals=JSON.parse(localStorage.getItem("rch_approvals")||"{}"); }catch(e){}
+  var phone = localStorage.getItem("rch_user_phone")||"guest";
+  var myApproval = approvals[phone];
+  if(myApproval && myApproval.amount>0){
+    if(getWallet()!==myApproval.amount){
+      setWallet(myApproval.amount);
+      updateWalletBar();
+      refreshBuyButtons();
+      showToast("Your deposit of GHS "+myApproval.amount+" has been approved!");
+      delete approvals[phone];
+      localStorage.setItem("rch_approvals",JSON.stringify(approvals));
+    }
+  }
+}
+
+// TOPUP
+function openTopupModal(){ document.getElementById("topupOverlay").classList.add("open"); document.getElementById("topupAmt").value=""; document.getElementById("topupPhone").value=""; }
+function closeTopup(){ document.getElementById("topupOverlay").classList.remove("open"); }
+function confirmTopup(){
+  var amt = parseFloat(document.getElementById("topupAmt").value);
+  var phone = document.getElementById("topupPhone").value.trim();
+  if(!amt||amt<100){ showToast("Minimum recharge is 100 GHS"); return; }
+  if(!phone||phone.length<10){ showToast("Enter your phone number"); return; }
+  if(![100,250,500,1000,2000].includes(amt)){ showToast("Enter exact plan amount: 100, 250, 500, 1000 or 2000"); return; }
+  // Save phone for approval tracking
+  localStorage.setItem("rch_user_phone", phone);
+  // Save pending request
+  savePendingRequest("deposit",{name:"Investor", phone:phone, amount:amt});
+  setWallet(amt);
+  closeTopup();
+  updateWalletBar();
+  refreshBuyButtons();
+  showToast("GHS "+amt+" recharged! Opening WhatsApp...");
+  var msg = ["NEW DEPOSIT - Recharge Investment","","Phone: "+phone,"Amount: GHS "+amt,"Plan: "+PLAN_NAMES[amt],"Time: "+new Date().toLocaleString(),"","Please verify payment to 0506072622 and approve this investor."].join("\n");
+  setTimeout(function(){ openWA(msg); }, 800);
+}
+
+// PRODUCT MODAL
+function openModal(name,price,daily){
+  var bal = getWallet();
+  if(bal>0 && bal!==price){ showToast("Your balance is GHS "+bal+". Only the "+PLAN_NAMES[bal]+" is available."); return; }
+  curProduct = {name:name,price:price,daily:daily};
+  document.getElementById("modalTitle").textContent = name;
+  document.getElementById("modalSub").textContent = "You will earn "+daily+" GHS every day";
+  document.getElementById("modalAmount").textContent = price.toLocaleString()+" GHS";
+  document.getElementById("modalOverlay").classList.add("open");
+  document.getElementById("phoneInput").value = "";
+  selectPay("mtn");
+}
+function closeModal(){ document.getElementById("modalOverlay").classList.remove("open"); }
+function sendDepositScreenshotWA(){
+  var amt = document.getElementById("modalAmount").textContent;
+  var msg = ["DEPOSIT PAYMENT - Recharge Investment","","Amount: "+amt,"Sent to: 0506072622 (Albert Manu) via Telecel Cash","Time: "+new Date().toLocaleString(),"","Payment screenshot attached. Please approve my investment."].join("\n");
+  openWA(msg);
+}
+function selectPay(m){
+  selectedPay = m;
+  document.getElementById("pm-mtn").classList.toggle("selected",m==="mtn");
+  document.getElementById("pm-telecel").classList.toggle("selected",m==="telecel");
+}
+function confirmPurchase(){
+  var phone = document.getElementById("phoneInput").value.trim();
+  if(!phone||phone.length<10){ showToast("Enter a valid phone number"); return; }
+  var investment = {name:curProduct.name,price:curProduct.price,daily:curProduct.daily,phone:phone,method:selectedPay,paidAt:Date.now()};
+  S_set("rch_investment",investment);
+  setWallet(0);
+  updateWalletBar();
+  refreshBuyButtons();
+  closeModal();
+  showToast("Activated! Revenue starts in 24 hours.");
+  setTimeout(function(){ switchTab("mines"); },1000);
+}
+
+// WITHDRAW
+function openWithdrawModal(totalEarned){
+  document.getElementById("wmAvail").textContent = "Available: GHS "+totalEarned.toLocaleString();
+  document.getElementById("wmAmt").value = "";
+  document.getElementById("wmPhone").value = "";
+  document.getElementById("wmName").value = "";
+  document.getElementById("wmPreview").textContent = "Enter amount above...";
+  document.getElementById("wmPreview").style.color = "var(--muted)";
+  document.getElementById("wmPreview").style.fontSize = "14px";
+  selWm("mtn");
+  document.getElementById("withdrawOverlay").classList.add("open");
+}
+function closeWithdraw(){ document.getElementById("withdrawOverlay").classList.remove("open"); }
+function selWm(m){
+  selectedWm = m;
+  document.getElementById("wm-mtn").classList.toggle("selected",m==="mtn");
+  document.getElementById("wm-telecel").classList.toggle("selected",m==="telecel");
+}
+function updateWmPreview(){
+  var v = document.getElementById("wmAmt").value;
+  var prev = document.getElementById("wmPreview");
+  if(!v||isNaN(v)||parseFloat(v)<=0){ prev.textContent="Enter amount above..."; prev.style.color="var(--muted)"; prev.style.fontSize="14px"; return; }
+  prev.textContent = "GHS "+parseFloat(v).toLocaleString()+" will be sent";
+  prev.style.color = "var(--gold2)"; prev.style.fontSize = "18px";
+}
+function submitWithdraw(){
+  var amt = parseFloat(document.getElementById("wmAmt").value);
+  var phone = document.getElementById("wmPhone").value.trim();
+  var name = document.getElementById("wmName").value.trim();
+  if(!amt||amt<=0){ showToast("Enter withdrawal amount"); return; }
+  if(!phone||phone.length<10){ showToast("Enter a valid phone number"); return; }
+  if(!name){ showToast("Enter MoMo account name"); return; }
+  var inv = S_get("rch_investment");
+  savePendingRequest("withdrawal",{name:"Investor",phone:phone,amount:amt,network:selectedWm==="mtn"?"MTN MoMo":"Telecel Cash",momoName:name});
+  closeWithdraw();
+  showToast("Withdrawal request sent! Opening WhatsApp...");
+  var network = selectedWm==="mtn"?"MTN MoMo":"Telecel Cash";
+  var msg = ["WITHDRAWAL REQUEST - Recharge Investment","","Amount: GHS "+amt,"Send to: "+phone,"Network: "+network,"MoMo Name: "+name,(inv?"Plan: "+inv.name+" (GHS "+inv.price+")":""),"Time: "+new Date().toLocaleString(),"","Please send GHS "+amt+" to "+phone+" via "+network+" now."].join("\n");
+  setTimeout(function(){ openWA(msg); },800);
+}
+
+// MINES
+function fmt(ms){ var d=new Date(ms); return d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",hour12:true})+" - "+d.toLocaleDateString([],{day:"numeric",month:"short"}); }
+
+function renderMines(){
+  var wrap = document.getElementById("minesContent");
+  var inv = S_get("rch_investment");
+  if(!inv){
+    wrap.innerHTML = "<div class=\"no-inv\"><div style=\"font-size:46px;margin-bottom:12px\">&#127974;</div><div style=\"font-family:Sora,sans-serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:7px\">No Active Investment</div><div>You haven't invested yet.<br><a onclick=\"switchTab('products')\">Browse Products &rarr;</a></div></div>"+buildDepSection(null)+buildPayInfo()+buildPlanTable(null)+buildPolicy();
+    return;
+  }
+  var now = Date.now();
+  var revenueStart = inv.paidAt+86400000;
+  var started = now>=revenueStart;
+  var daysPassed = started?Math.floor((now-revenueStart)/86400000):0;
+  var daysTotal = Math.floor((now-inv.paidAt)/86400000);
+  var earned = daysPassed*inv.daily;
+  var progress = Math.min((daysTotal/5)*100,100);
+  var canW = daysTotal>=5;
+  var dLeft = Math.max(5-daysTotal,0);
+  var nextCredit = revenueStart+(daysPassed+1)*86400000;
+  wrap.innerHTML =
+    "<div class=\"balance-card\">"+
+    "<div class=\"bal-label\">Total Earned</div>"+
+    "<div class=\"bal-amount\">GHS "+earned.toLocaleString()+"</div>"+
+    "<div class=\"bal-daily\">"+(started?"+"+inv.daily+" GHS per day":"Revenue starts at "+fmt(revenueStart))+"</div>"+
+    "<div class=\"bal-plan\">"+inv.name+" &middot; GHS "+inv.price.toLocaleString()+" invested &middot; "+(inv.method==="mtn"?"MTN MoMo":"Telecel Cash")+"</div>"+
+    "<div class=\"next-credit\">"+(started?"Next credit: "+fmt(nextCredit):"First credit: "+fmt(revenueStart))+"</div>"+
+    "</div>"+
+    "<div class=\"cd-wrap\">"+
+    "<div class=\"cd-title\">Withdrawal Countdown</div>"+
+    "<div class=\"cd-days\">"+(canW?"&#10003;":dLeft)+"</div>"+
+    "<div class=\"cd-days-label\">"+(canW?"Ready to withdraw!":dLeft+" day"+(dLeft!==1?"s":"")+" until withdrawal is unlocked")+"</div>"+
+    "<div class=\"cd-bar-bg\"><div class=\"cd-bar-fill\" style=\"width:"+progress+"%\"></div></div>"+
+    "<div class=\"cd-info\"><span>Day "+daysTotal+"</span><span>Day 5 (Minimum)</span></div>"+
+    "</div>"+
+    "<div class=\"withdraw-btn-wrap\"><div class=\"withdraw-btn"+(canW?" enabled":"")+"\""+
+    (canW?" onclick=\"openWithdrawModal("+earned+")\"":"")+">"+
+    (canW?"Withdraw Now":"Withdraw locked - "+dLeft+" day"+(dLeft!==1?"s":"")+" remaining")+
+    "</div></div>"+
+    buildDepSection(inv.price)+buildPayInfo()+buildPlanTable(inv.price)+buildPolicy();
+}
+
+function buildDepSection(activePlan){
+  var tiers = PLANS.map(function(pl){
+    return "<div class=\"dep-tier"+(activePlan===pl.p?" sel":"")+"\" onclick=\"openModal('"+PLAN_NAMES[pl.p]+"',"+pl.p+","+pl.d+")\">"+
+    "<div><div class=\"dt-amt\">"+pl.p.toLocaleString()+" GHS</div><div class=\"dt-lbl\">Investment</div></div>"+
+    "<div><div class=\"dt-earn\">+"+pl.d+" GHS/day</div><div class=\"dt-lbl\">Daily Revenue</div></div>"+
+    "<button class=\"dt-btn\">Deposit</button></div>";
+  }).join("");
+  return "<div class=\"sec-title\" style=\"padding:4px 14px 8px\">Make a Deposit</div>"+
+    "<div class=\"dep-section\"><div class=\"dep-sec-hdr\"><div class=\"dep-sec-hdr-title\">Choose Investment Tier</div>"+
+    "<div class=\"dep-sec-hdr-sub\">Recharge your account, then buy matching plan</div></div>"+
+    "<div class=\"dep-tiers\">"+tiers+"</div></div>";
+}
+
+function buildPayInfo(){
+  return "<div class=\"pay-info-box\"><div class=\"pib-title\">Official Deposit Details</div>"+
+    "<div class=\"pib-row\"><span class=\"pib-lbl\">Account Name</span><span class=\"pib-val\">Recharge Investment Ltd, Gh</span></div>"+
+    "<div class=\"pib-row\"><span class=\"pib-lbl\">Network</span><span class=\"pib-val\">Telecel Cash Only</span></div>"+
+    "<div class=\"pib-row\"><span class=\"pib-lbl\">Number</span><span class=\"pib-val\">0506072622</span></div>"+
+    "<div class=\"pib-row\"><span class=\"pib-lbl\">Reference</span><span class=\"pib-val\">Albert Manu</span></div>"+
+    "<div class=\"pib-note\">Send your chosen amount to 0506072622 (Telecel) with reference Albert Manu. Revenue reflects exactly 24 hours after payment.</div></div>";
+}
+
+function buildPlanTable(active){
+  var rows = PLANS.map(function(pl){
+    return "<div class=\"plan-row"+(active===pl.p?" act":"")+"\" ><div class=\"plan-dot\"></div>"+
+    "<div><div class=\"plan-invest\">"+pl.p.toLocaleString()+" GHS</div><div class=\"plan-sublabel\">Investment</div></div>"+
+    "<div style=\"margin-left:auto;text-align:right\"><div class=\"plan-earn\">+"+pl.d+" GHS/day</div><div class=\"plan-sublabel\">Daily Revenue</div></div></div>";
+  }).join("");
+  return "<div class=\"sec-title\" style=\"padding:4px 14px 8px\">All Plans</div><div class=\"plan-table\">"+rows+"</div>";
+}
+
+function buildPolicy(){
+  return "<div class=\"sec-title\" style=\"padding:4px 14px 8px\">Policy</div>"+
+    "<div class=\"policy-box\"><div class=\"policy-title\">Investment Policy</div>"+
+    "<div class=\"policy-text\">Minimum withdrawal period: 5 days from payment date<br>Revenue starts 24 hours after payment, same time each day<br>Deposit only via Telecel Cash to 0506072622 (Albert Manu)<br>Withdrawals accepted on MTN MoMo or Telecel Cash<br>Balance must match package amount exactly to purchase</div></div>";
+}
+
+// INFO
+var INFO = {
+  about:{title:"About Recharge Investment",body:"Recharge Investment Ltd, Gh is a Ghana-based digital investment platform founded in 2023. We partner with verified Chinese technology companies — including DJI, Huawei, BYD, and CATL — to offer structured daily-return investment packages.<br><br>From as little as GHS 100, anyone with MTN or Telecel mobile money can invest and earn daily returns. We have helped thousands of investors across Ghana, Nigeria, Cameroon, Senegal, South Africa, and Kenya.<br><br><strong style='color:var(--gold2)'>Recharge Investment Ltd, Gh &mdash; Empowering Africa through Smart Investment.</strong>"},
+  support:{title:"Customer Service",body:"Our support team is available <strong style='color:var(--gold2)'>24 hours a day, 7 days a week</strong> via email.<br><br><div style='background:#1C1400;border:1px solid #4A3000;border-radius:12px;padding:14px;margin:10px 0;text-align:center'><div style='font-size:12px;color:#888;margin-bottom:6px'>Official Support Email</div><div style='font-family:Sora,sans-serif;font-size:15px;font-weight:700;color:#F5C842'>rechargeinvestgh@outlook.com</div></div><br><strong>Common issues we handle:</strong><br>• Payment confirmation delays<br>• Revenue calculation queries<br>• Withdrawal processing<br>• Account issues<br>• Plan upgrade assistance<br><br>Average response time: <strong style='color:var(--green)'>Under 24 hours</strong><br><br>For deposits always send to Telecel number <strong style='color:var(--gold)'>0506072622</strong> (Albert Manu).<br><br><a href='mailto:rechargeinvestgh@outlook.com' style='display:inline-block;margin-top:8px;background:linear-gradient(135deg,#D4A017,#8B6000);color:#fff;padding:14px 28px;border-radius:10px;font-family:Sora,sans-serif;font-size:14px;font-weight:700;text-decoration:none'>&#128231; Email Us Now</a>"},
+  regulations:{title:"Regulations & Compliance",body:"<strong style='color:var(--gold2)'>Investment Policy</strong><br>Five tiers: GHS 100, 250, 500, 1000 and 2000. Each earns a fixed daily return (25 to 520 GHS/day).<br><br><strong style='color:var(--gold2)'>Withdrawal Rules</strong><br>Minimum 5 days holding period. Withdrawals via MTN MoMo or Telecel Cash. Processing time: ~10 minutes.<br><br><strong style='color:var(--gold2)'>Disclaimer</strong><br>Investment involves risk. Past returns are not a guarantee of future performance."}
+};
+function openInfo(key){ document.getElementById("infoTitle").textContent=INFO[key].title; document.getElementById("infoBody").innerHTML=INFO[key].body; document.getElementById("infoOverlay").classList.add("open"); }
+function closeInfo(){ document.getElementById("infoOverlay").classList.remove("open"); }
+
+// CHAT
+function sendChat(){
+  var input = document.getElementById("chatInput");
+  var msg = input.value.trim();
+  if(!msg) return;
+  var area = document.getElementById("chatArea");
+  var now = new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+  var d = document.createElement("div");
+  d.className = "my-wrap";
+  d.innerHTML = "<div class=\"chat-meta\" style=\"text-align:right\">You &middot; "+now+"</div><div class=\"chat-msg me\">"+msg+"</div>";
+  area.appendChild(d); area.scrollTop=area.scrollHeight; input.value="";
+  var replies = ["Welcome! Ask us anything. Email us at rechargeinvestgh@outlook.com","Revenue is always on time — exactly 24 hours!","Both MTN and Telecel work great here!","Minimum 5 days before you can withdraw.","For support email rechargeinvestgh@outlook.com anytime.","Deposit to 0506072622 (Albert Manu) via Telecel Cash."];
+  setTimeout(function(){
+    var r = document.createElement("div"); r.className="chat-bubble-wrap";
+    r.innerHTML = "<div class=\"chat-initials\">AD</div><div><div class=\"chat-meta\">Admin &middot; "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+"</div><div class=\"chat-msg\">"+replies[Math.floor(Math.random()*replies.length)]+"</div></div>";
+    area.appendChild(r); area.scrollTop=area.scrollHeight;
+  },1100);
+}
+
+// ADMIN
+function adminTap(){
+  adminTapCount++;
+  clearTimeout(adminTapTimer);
+  adminTapTimer = setTimeout(function(){ adminTapCount=0; },800);
+  if(adminTapCount>=5){
+    adminTapCount=0;
+    document.getElementById("adminPassScreen").classList.add("open");
+    document.getElementById("adminPassInput").value="";
+    document.getElementById("adminPassErr").style.display="none";
+  }
+}
+function checkAdminPass(){
+  var val = document.getElementById("adminPassInput").value.trim();
+  var err = document.getElementById("adminPassErr");
+  if(val!==ADMIN_PASSWORD){ err.textContent="Incorrect password."; err.style.display="block"; return; }
+  document.getElementById("adminPassScreen").classList.remove("open");
+  document.getElementById("adminScreen").classList.add("open");
+  renderAdminQueue();
+  renderAdminStats();
+}
+function closeAdminPass(){ document.getElementById("adminPassScreen").classList.remove("open"); }
+function closeAdmin(){ document.getElementById("adminScreen").classList.remove("open"); }
+
+function savePendingRequest(type,data){
+  var requests = [];
+  try{ requests=JSON.parse(localStorage.getItem("rch_pending_requests")||"[]"); }catch(e){}
+  requests.push(Object.assign({},data,{type:type,status:"pending",createdAt:Date.now(),id:Date.now()}));
+  localStorage.setItem("rch_pending_requests",JSON.stringify(requests));
+}
+
+function renderAdminQueue(){
+  var queue = document.getElementById("adminQueue");
+  if(!queue) return;
+  var requests = [];
+  try{ requests=JSON.parse(localStorage.getItem("rch_pending_requests")||"[]"); }catch(e){}
+  var pending = requests.filter(function(r){ return r.status==="pending"; }).sort(function(a,b){ return b.createdAt-a.createdAt; });
+  if(!pending.length){ queue.innerHTML="<div class=\"empty-queue\">No pending requests</div>"; renderAdminStats(); return; }
+  queue.innerHTML = pending.map(function(r){
+    return "<div class=\"queue-item\">"+
+      "<div class=\"qi-name\">"+(r.type==="deposit"?"Deposit":"Withdrawal")+" - "+(r.name||"Investor")+"</div>"+
+      "<div class=\"qi-detail\">Phone: "+(r.phone||"N/A")+"<br>Amount: GHS "+(r.amount||"N/A")+"<br>"+
+      (r.type==="withdrawal"?"Network: "+(r.network||"N/A")+"<br>MoMo Name: "+(r.momoName||"N/A")+"<br>":"")+
+      "Time: "+new Date(r.createdAt).toLocaleString()+"</div>"+
+      "<div class=\"qi-btns\">"+
+      "<button class=\"qi-approve\" onclick=\"approveById("+r.id+")\">Approve</button>"+
+      "<button class=\"qi-reject\" onclick=\"rejectById("+r.id+")\">Reject</button>"+
+      "</div></div>";
+  }).join("");
+  renderAdminStats();
+}
+
+function approveById(id){
+  var requests = [];
+  try{ requests=JSON.parse(localStorage.getItem("rch_pending_requests")||"[]"); }catch(e){}
+  var req = requests.find(function(r){ return r.id===id; });
+  if(!req) return;
+  req.status = "approved";
+  localStorage.setItem("rch_pending_requests",JSON.stringify(requests));
+  var approvals = {};
+  try{ approvals=JSON.parse(localStorage.getItem("rch_approvals")||"{}"); }catch(e){}
+  approvals[req.phone] = {amount:parseFloat(req.amount),approvedAt:Date.now()};
+  localStorage.setItem("rch_approvals",JSON.stringify(approvals));
+  renderAdminQueue();
+  showToast("Approved! Opening WhatsApp...");
+  var userPhone = "233"+req.phone.replace(/^0/,"");
+  var planName = PLAN_NAMES[parseFloat(req.amount)]||"Investment Plan";
+  var daily = (PLANS.find(function(p){ return p.p===parseFloat(req.amount); })||{d:0}).d;
+  var msg = ["APPROVED - Recharge Investment","","Hello "+(req.name||"Investor")+"!","Your deposit of GHS "+req.amount+" has been approved.","","Open the Recharge app now","Go to Products tab","Your balance of GHS "+req.amount+" is ready","Tap BUY NOW on the "+planName,"","Daily revenue of GHS "+daily+" starts 24 hours after purchase.","- Recharge Investment Team"].join("\n");
+  window.open("https://wa.me/"+userPhone+"?text="+encodeURIComponent(msg),"_blank");
+}
+
+function rejectById(id){
+  var requests = [];
+  try{ requests=JSON.parse(localStorage.getItem("rch_pending_requests")||"[]"); }catch(e){}
+  var req = requests.find(function(r){ return r.id===id; });
+  if(!req) return;
+  req.status = "rejected";
+  localStorage.setItem("rch_pending_requests",JSON.stringify(requests));
+  renderAdminQueue();
+  var userPhone = "233"+req.phone.replace(/^0/,"");
+  var msg = ["PAYMENT ISSUE - Recharge Investment","","We could not verify your payment. Please check:","- Send exact amount to 0506072622","- Network: Telecel Cash only","- Reference: Albert Manu","","Reply with your payment screenshot.","- Recharge Investment Team"].join("\n");
+  window.open("https://wa.me/"+userPhone+"?text="+encodeURIComponent(msg),"_blank");
+  showToast("Rejected and WhatsApp sent.");
+}
+
+function approveDeposit(){
+  var phone = document.getElementById("approvePhone").value.trim();
+  var name = document.getElementById("approveName").value.trim();
+  var amt = parseFloat(document.getElementById("approveAmt").value);
+  if(!phone||phone.length<10){ showToast("Enter investor phone"); return; }
+  if(!name){ showToast("Enter investor name"); return; }
+  if(!amt||![100,250,500,1000,2000].includes(amt)){ showToast("Enter valid amount"); return; }
+  var approvals = {};
+  try{ approvals=JSON.parse(localStorage.getItem("rch_approvals")||"{}"); }catch(e){}
+  approvals[phone] = {amount:amt,approvedAt:Date.now()};
+  localStorage.setItem("rch_approvals",JSON.stringify(approvals));
+  document.getElementById("approvePhone").value="";
+  document.getElementById("approveName").value="";
+  document.getElementById("approveAmt").value="";
+  showToast("Approved! Opening WhatsApp...");
+  var userPhone = "233"+phone.replace(/^0/,"");
+  var planName = PLAN_NAMES[amt]||"Investment Plan";
+  var daily = (PLANS.find(function(p){ return p.p===amt; })||{d:0}).d;
+  var msg = ["APPROVED - Recharge Investment","","Hello "+name+"!","Your deposit of GHS "+amt+" has been approved.","","Open the Recharge app now","Go to Products tab","Your balance of GHS "+amt+" is ready","Tap BUY NOW on the "+planName,"","Daily revenue of GHS "+daily+" starts 24 hours after purchase.","- Recharge Investment Team"].join("\n");
+  window.open("https://wa.me/"+userPhone+"?text="+encodeURIComponent(msg),"_blank");
+}
+
+function rejectDeposit(){
+  var phone = document.getElementById("approvePhone").value.trim();
+  var name = document.getElementById("approveName").value.trim();
+  var amt = document.getElementById("approveAmt").value;
+  if(!phone||phone.length<10){ showToast("Enter investor phone"); return; }
+  var userPhone = "233"+phone.replace(/^0/,"");
+  var msg = ["PAYMENT ISSUE - Recharge Investment","","Hello "+(name||"Investor")+".","We could not verify your payment"+(amt?" of GHS "+amt:"")+".","Please check:","- Send exact amount to 0506072622","- Network: Telecel Cash only","- Reference: Albert Manu","","Reply with your payment screenshot.","- Recharge Investment Team"].join("\n");
+  window.open("https://wa.me/"+userPhone+"?text="+encodeURIComponent(msg),"_blank");
+  showToast("Rejection WhatsApp sent.");
+}
+
+function sendCustomWA(){
+  var phone = document.getElementById("customPhone").value.trim();
+  var msg = document.getElementById("customMsg").value.trim();
+  if(!phone||phone.length<10){ showToast("Enter phone number"); return; }
+  if(!msg){ showToast("Enter a message"); return; }
+  var userPhone = "233"+phone.replace(/^0/,"");
+  window.open("https://wa.me/"+userPhone+"?text="+encodeURIComponent(msg),"_blank");
+}
+
+function renderAdminStats(){
+  var stats = document.getElementById("adminStats");
+  if(!stats) return;
+  var requests = [];
+  try{ requests=JSON.parse(localStorage.getItem("rch_pending_requests")||"[]"); }catch(e){}
+  var pending = requests.filter(function(r){ return r.status==="pending"; }).length;
+  var approved = requests.filter(function(r){ return r.status==="approved"; }).length;
+  var rejected = requests.filter(function(r){ return r.status==="rejected"; }).length;
+  var totalDep = requests.filter(function(r){ return r.type==="deposit"&&r.status==="approved"; }).reduce(function(s,r){ return s+(parseFloat(r.amount)||0); },0);
+  stats.innerHTML = "<div class=\"admin-sec-title\">Platform Stats</div>"+
+    "<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:10px\">"+
+    "<div style=\"background:#1A1A1A;border-radius:12px;padding:14px;text-align:center\"><div style=\"font-family:Sora,sans-serif;font-size:22px;font-weight:700;color:var(--gold2)\">"+pending+"</div><div style=\"font-size:11px;color:var(--muted);margin-top:3px\">Pending</div></div>"+
+    "<div style=\"background:#1A1A1A;border-radius:12px;padding:14px;text-align:center\"><div style=\"font-family:Sora,sans-serif;font-size:22px;font-weight:700;color:var(--green)\">"+approved+"</div><div style=\"font-size:11px;color:var(--muted);margin-top:3px\">Approved</div></div>"+
+    "<div style=\"background:#1A1A1A;border-radius:12px;padding:14px;text-align:center\"><div style=\"font-family:Sora,sans-serif;font-size:22px;font-weight:700;color:#E74C3C\">"+rejected+"</div><div style=\"font-size:11px;color:var(--muted);margin-top:3px\">Rejected</div></div>"+
+    "<div style=\"background:#1A1A1A;border-radius:12px;padding:14px;text-align:center\"><div style=\"font-family:Sora,sans-serif;font-size:22px;font-weight:700;color:var(--gold2)\">GHS "+totalDep.toLocaleString()+"</div><div style=\"font-size:11px;color:var(--muted);margin-top:3px\">Total Deposited</div></div>"+
+    "</div>";
+}
+
+// BOOT — go straight to app, no login needed
+updateWalletBar();
+refreshBuyButtons();
+renderMines();
+</script>
+</body>
+</html>
